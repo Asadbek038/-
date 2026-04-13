@@ -1,0 +1,58 @@
+import asyncio
+from datetime import datetime
+from aiogram import Bot, Dispatcher, types
+from aiogram.filters import Command
+
+# Вставь сюда свой токен, который дал BotFather
+API_TOKEN = 'ВАШ_ТОКЕН_ЗДЕСЬ'
+
+bot = Bot(token=API_TOKEN)
+dp = Dispatcher()
+
+# База данных расписания (можно редактировать под себя)
+SCHEDULE = {
+    0: [ # Понедельник
+        {"name": "Математика", "start": "09:00", "end": "10:30"},
+        {"name": "Физика", "start": "10:40", "end": "12:10"},
+    ],
+    1: [ # Вторник
+        {"name": "История", "start": "09:00", "end": "10:30"},
+        {"name": "Физкультура", "start": "10:40", "end": "12:10"},
+        {"name": "Информатика", "start": "12:40", "end": "14:10"},
+    ],
+    # 2: Среда, 3: Четверг, 4: Пятница, 5: Суббота, 6: Воскресенье
+}
+
+def get_today_schedule():
+    day_of_week = datetime.now().weekday()  # Получаем номер дня (0-6)
+    day_name = ["Понедельник", "Вторник", "Среду", "Четверг", "Пятницу", "Субботу", "Воскресенье"][day_of_week]
+    
+    today_lessons = SCHEDULE.get(day_of_week, [])
+    
+    if not today_lessons:
+        return f"Сегодня ({day_name}) пар нет! Отдыхай. 😎"
+    
+    res = f"📅 Расписание на сегодня ({day_name}):\n"
+    res += f"Всего пар: {len(today_lessons)}\n"
+    res += "--------------------------\n"
+    
+    for i, lesson in enumerate(today_lessons, 1):
+        res += f"{i}. {lesson['name']}\n   ⏰ {lesson['start']} — {lesson['end']}\n"
+        
+    return res
+
+@dp.message(Command("start"))
+async def cmd_start(message: types.Message):
+    await message.answer("Привет! Напиши /today, чтобы узнать расписание на сегодня.")
+
+@dp.message(Command("today"))
+async def cmd_today(message: types.Message):
+    text = get_today_schedule()
+    await message.answer(text)
+
+async def main():
+    print("Бот запущен...")
+    await dp.start_polling(bot)
+
+if __name__ == "__main__":
+    asyncio.run(main())
